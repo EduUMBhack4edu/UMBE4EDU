@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google Speech to Text</title>
+</head>
+<body>
+    <h1>Cuenta del 1 al 10 usando la API de Google Speech-to-Text</h1>
+    <button id="record">Iniciar grabación</button>
+    <button id="stop" disabled>Detener grabación</button>
+
+    <div id="result-container" style="display: none;">
+        <h3>Transcripción:</h3>
+        <p id="result"></p>
+    </div>
+
+    <script>
+        const recordButton = document.getElementById('record');
+        const stopButton = document.getElementById('stop');
+        const resultContainer = document.getElementById('result-container');
+        const result = document.getElementById('result');
+        
+        let mediaRecorder;
+        let audioChunks = [];
+
+        recordButton.addEventListener('click', async () => {
+            audioChunks = [];
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' }); // Cambia a 'audio/webm'
+            
+            mediaRecorder.addEventListener('dataavailable', event => {
+                audioChunks.push(event.data);
+            });
+            
+            mediaRecorder.addEventListener('stop', async () => {
+                const audioBlob = new Blob(audioChunks, { type: 'audio/webm' }); // Cambia a 'audio/webm'
+                const formData = new FormData();
+                formData.append('audio', audioBlob, 'audio.webm'); // Cambia el nombre del archivo a 'audio.webm'
+
+                try {
+                    console.log('Enviando audio al servidor');
+                    const response = await fetch('/speech-to-text', {
+                        method: 'POST',
+                        body: formData,
+                    });
+
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.error);
+                    }
+
+                    const data = await response.json();
+                    result.innerText = `Has dicho: ${data.transcription}`;
+                    resultContainer.style.display = 'block';
+                } catch (error) {
+                    console.error('Error en la transcripción:', error);
+                    result.innerText = 'Hubo un error al procesar el audio';
+                    resultContainer.style.display = 'block';
+                }
+            });
+
+            mediaRecorder.start();
+            recordButton.disabled = true;
+            stopButton.disabled = false;
+        });
+
+        stopButton.addEventListener('click', () => {
+            mediaRecorder.stop();
+            recordButton.disabled = false;
+            stopButton.disabled = true;
+        });
+    </script>
+</body>
+</html>

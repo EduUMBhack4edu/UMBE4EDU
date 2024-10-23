@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prueba de Audiometría y Conversión de Texto a Audio</title>
+    <link rel="stylesheet" href="Tuestilo.css">
+</head>
+
+<body>
+    <h1>Prueba de Audiometría y Conversión de Texto a Audio</h1>
+    
+    <!-- Sección de Prueba de Audiometría -->
+    <div id="audiometrySection">
+        <h2>Prueba de Audiometría</h2>
+        <p>Haz clic en "Iniciar Prueba" para comenzar la audiometría.</p>
+        <button id="startTest">Iniciar Prueba de Audiometría</button>
+        <p id="instruction"></p>
+    </div>
+    
+    <!-- Sección de Conversión de Texto a Audio (inicialmente oculta) -->
+    <div id="textToAudioSection" style="display: none;">
+        <h2>Conversión de Texto a Audio</h2>
+        <textarea id="exerciseText" placeholder="Escribe el ejercicio aquí..."></textarea>
+        <button onclick="convertToAudio()">Convertir a Audio</button>
+        <audio id="audioPlayer" controls style="display: none;"></audio>
+    </div>
+
+    <h2>Grabar Respuesta Hablada</h2>
+    <button id="startRecording" onclick="startRecording()" disabled>Iniciar Grabación</button>
+    <button id="stopRecording" onclick="stopRecording()" disabled>Detener Grabación</button>
+    <p id="recordingStatus"></p>
+    <p id="transcriptionResult"></p> <!-- Aquí se mostrará la transcripción -->
+
+    <script>
+        let mediaRecorder;
+        let audioChunks = [];
+        let finalGain = 0.1; // Variable global para almacenar la ganancia ajustada
+
+        // Función para la prueba de audiometría
+        document.getElementById('startTest').addEventListener('click', function() {
+            var audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            var oscillator = audioContext.createOscillator();
+            oscillator.type = 'sine'; // Tipo de onda sinusoidal
+            oscillator.frequency.value = 300; // Frecuencia en Hz
+            var gainNode = audioContext.createGain();
+            gainNode.gain.value = finalGain; // Volumen inicial bajo
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            oscillator.start();
+            setTimeout(function() {
+                gainNode.gain.value = 0.1; // Aumentar el volumen
+                updateInstruction("Presiona 'f' si escuchas el tono, de lo contrario pulsa 'j'");
+                document.addEventListener('keydown', checkResponse);
+            }, 3000);
+            let attempts = 0;
+
+            function updateInstruction(text) {
+                document.getElementById('instruction').innerText = text;
+            }
+
+            function checkResponse(event) {
+                if (event.key === 'f') {
+                    oscillator.stop();
+                    document.removeEventListener('keydown', checkResponse);
+                    finalGain = gainNode.gain.value; // Guardar la ganancia final
+                    document.getElementById('textToAudioSection').style.display = 'block'; // Mostrar la segunda sección
+                    enableRecordingButtons();
+                } else if (event.key === 'j') {
+                    attempts++;
+                    if (attempts === 2) {
+                        gainNode.gain.value = 0.5; // Aumentar el volumen
+                        finalGain = gainNode.gain.value;
+                        updateInstruction(""); // Limpiar el texto
+                        setTimeout(function() {
+                            updateInstruction("Presiona 'f' si escuchas el tono, de lo contrario pulsa 'j'");
+                        }, 3000);
+                    } else if (attempts === 3) {
+                        gainNode.gain.value = 1; // Incremento final de la ganancia
+                        finalGain = gainNode.gain.value; // Guardar la ganancia final
+                        document.removeEventListener('keydown', checkResponse);
+                        updateInstruction("Prueba completada");
+                        setTimeout(function() {
+                            oscillator.stop();
+                            document.getElementById('textToAudioSection').style.display = 'block'; // Mostrar la segunda sección
+                            enableRecordingButtons();
+                        }, 3000); // Mantener el tono por otros 5 segundos antes de detenerlo
+                    }
+                }
+            }
+        });
+
+        // Función para habilitar los botones de grabación después de la prueba de audiometría
+        function enableRecordingButtons() {
+            document.getElementById('startRecording').disabled = false;
+        }
+
+        // Función para convertir texto a audio
+        async function convertToAudio() {
+            const exerciseText = document.getElementById('exerciseText').value;
+
+            const response = await fetch('http://localhost:3000/api/convert', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ exercise: exerciseText })
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                const audioPlayer = document.getElementById('audioPlayer');
+                audioPlayer.src = data.audioUrl;
+                audioPlayer.style.display = 'block';
+
+                // Aplicar la ganancia ajustada desde la audiometría
+                applyAudioGain(audioPlayer);
+            } else {
+                alert('Error al convertir texto a audio');
+            }
+        }
+
+        // Función para aplicar la ganancia ajustada en la reproducción del audio
+        function applyAudioGain(audioElement) {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const track = audioContext.createMediaElementSource(audioElement);
+            const gainNode = audioContext.createGain();
+
+            gainNode.gain.value = finalGain; // Usar la ganancia ajustada de la prueba de audiometría
+
+            track.connect(gainNode).connect(audioContext.destination);
+
+            // Reproducir el audio
+            audioElement.play();
+        }
+
+        async function startRecording() {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            mediaRecorder = new MediaRecorder(stream);
+
+            mediaRecorder.start();
+            document.getElementById('recordingStatus').textContent = 'Grabando...';
+            document.getElementById('startRecording').disabled = true;
+            document.getElementById('stopRecording').disabled = false;
+
+            mediaRecorder.ondataavailable = event => {
+                audioChunks.push(event.data);
+            };
+
+            mediaRecorder.onstop = async () => {
+                const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                audioChunks = [];
+                await uploadAudio(audioBlob);
+                document.getElementById('recordingStatus').textContent = 'Grabación detenida.';
+                document.getElementById('startRecording').disabled = false;
+                document.getElementById('stopRecording').disabled = true;
+            };
+        }
+
+        function stopRecording() {
+            mediaRecorder.stop();
+        }
+
+        async function uploadAudio(blob) {
+            const formData = new FormData();
+            formData.append('audio', blob, 'recording.wav'); // Asegúrate de dar un nombre al archivo
+
+            const response = await fetch('http://localhost:3000/api/answer', {
+                method: 'POST',
+                body: formData
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                // Mostrar la transcripción en el HTML
+                document.getElementById('transcriptionResult').textContent = `Respuesta Recibida`;
+            } else {
+                alert('Error al subir el audio');
+            }
+        }
+    </script>
+</body>
+
+</html>

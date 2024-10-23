@@ -1,0 +1,67 @@
+body {
+    background-image: url('fondo.jpg'); /* Imagen de fondo */
+    background-size: cover; /* Asegura que la imagen cubra todo el fondo */
+    background-repeat: no-repeat; /* Evita que la imagen se repita */
+    background-position: center; /* Centra la imagen */
+    color: white; /* Color del texto */
+    font-family: Arial, sans-serif; /* Fuente predeterminada */
+    display: flex; /* Usa Flexbox para centrar contenido */
+    flex-direction: column; /* Coloca los elementos en columna */
+    align-items: center; /* Centra horizontalmente los elementos */
+    height: 100vh; /* Asegura que el body ocupe toda la altura de la ventana */
+    padding-top: 20px; /* Espacio en la parte superior */
+}
+
+h1 {
+    text-align: center; /* Centra el encabezado */
+    margin-bottom: 20px; /* Espacio debajo del encabezado */
+    padding: 15px; /* Espacio interno del título */
+    border: 2px solid #007BFF; /* Borde del cuadro */
+    border-radius: 10px; /* Bordes redondeados */
+    background-color: rgba(0, 123, 255, 0.5); /* Fondo semi-transparente para el cuadro */
+}
+
+.button-container {
+    display: flex; /* Usa Flexbox para los botones */
+    justify-content: center; /* Centra los botones horizontalmente */
+}
+
+button {
+    background-color: #007BFF; /* Color de fondo del botón */
+    color: white; /* Color del texto del botón */
+    border: none; /* Sin borde */
+    padding: 15px 30px; /* Aumenta el espaciado interno */
+    margin: 10px; /* Espacio entre los botones */
+    border-radius: 5px; /* Bordes redondeados */
+    cursor: pointer; /* Cambia el cursor al pasar sobre el botón */
+    font-size: 45px; /* Aumenta el tamaño de fuente */
+    transition: background-color 0.3s, transform 0.3s; /* Transición suave para el color de fondo y transformación */
+}
+
+button:hover {
+    background-color: #0056b3; /* Color de fondo al pasar el mouse */
+    transform: scale(1.1); /* Aumenta el tamaño del botón al pasar el mouse */
+}
+
+#result-container {
+    text-align: center; /* Centra el texto en el contenedor de resultados */
+    margin-top: 20px; /* Espacio arriba del contenedor de resultados */
+    padding: 20px; /* Espaciado interno del contenedor */
+    background-color: rgba(255, 255, 255, 0.8); /* Fondo semi-transparente */
+    border-radius: 10px; /* Bordes redondeados */
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3); /* Sombra para darle profundidad */
+    width: 80%; /* Ancho del contenedor */
+    max-width: 600px; /* Ancho máximo del contenedor */
+}
+
+#result-container h3 {
+    color: black; /* Color negro para el encabezado de transcripción */
+    margin: 0; /* Elimina el margen para un mejor diseño */
+    padding-bottom: 10px; /* Espacio debajo del encabezado */
+}
+
+#result {
+    font-size: 18px; /* Tamaño de fuente del resultado */
+    font-weight: bold; /* Negrita para el texto de resultado */
+    color: #333; /* Color del texto */
+}

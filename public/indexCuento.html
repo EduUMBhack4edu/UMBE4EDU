@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <link rel="stylesheet" href="Tuestilo.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Convertir Texto a Audio</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 600px;
+      margin: 50px auto;
+      text-align: center;
+    }
+    textarea {
+      width: 100%;
+      height: 150px;
+      margin-bottom: 20px;
+      padding: 10px;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 50px;
+      cursor: pointer;
+    }
+    audio {
+      margin-top: 20px;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Convertir Texto a Audio</h1>
+  <textarea id="text-input" placeholder="Escribe tu cuento aquí..."></textarea><br>
+  <button onclick="convertTextToSpeech()">Convertir a Audio</button>
+
+  <audio id="audio-player" controls></audio>
+
+  <script>
+    async function convertTextToSpeech() {
+      const text = document.getElementById('text-input').value;
+
+      if (!text.trim()) {
+        alert('Por favor, ingresa algún texto.');
+        return;
+      }
+
+      try {
+        const response = await fetch('http://localhost:3000/api/convert', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text })
+        });
+
+        if (!response.ok) {
+          throw new Error('Error en la conversión de texto a audio');
+        }
+
+        const data = await response.json();
+        const audioPlayer = document.getElementById('audio-player');
+        
+        // Añadir un parámetro único para evitar el caché
+        const timestamp = new Date().getTime();
+        audioPlayer.src = `${data.audioUrl}?t=${timestamp}`;
+        
+        audioPlayer.style.display = 'block';
+        audioPlayer.play();
+      } catch (error) {
+        alert('Hubo un error: ' + error.message);
+      }
+    }
+  </script>
+
+</body>
+</html>

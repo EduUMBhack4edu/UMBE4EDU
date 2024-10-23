@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bienvenida</title>
+    <link rel="stylesheet" href="body.css">
+</head>
+<body>
+    <div class="contenedor-bienvenida" id="bienvenida">
+        <h1 class="titulo-principal" id="titulo-principal">Edu.UMB.HACK4EDU</h1>
+        <p class="mensaje-bienvenida">¡Bienvenidos a Edu.UMB.HACK4EDU!</p>
+    </div>
+
+    <!-- Contenedor para los banners -->
+    <div class="contenedor-banner">
+        <img id="banner" src="baner1.png" alt="Banner" class="imagen-banner">
+    </div>
+
+    <!-- Animación de carga -->
+    <div class="cargando" id="cargando">
+        <div class="loader"></div>
+    </div>
+
+    <script>
+        // Función para agrandar el título después de 3 segundos
+        setTimeout(() => {
+            const titulo = document.getElementById('titulo-principal');
+            titulo.classList.add('titulo-agrandado');
+        }, 3000);
+
+        // Cambio de imagen del banner cada 7 segundos con efecto de desvanecimiento
+        const imagenes = ["baner1.png", "baner2.png"];
+        let indice = 0;
+        const banner = document.getElementById('banner');
+
+        function cambiarImagen() {
+            // Desvanece la imagen actual
+            banner.classList.remove('fade-in');
+            banner.classList.add('fade-out');
+
+            setTimeout(() => {
+                // Cambia la imagen cuando el desvanecimiento termine
+                indice = (indice + 1) % imagenes.length;
+                banner.src = imagenes[indice];
+
+                // Aplica el efecto de aparición
+                banner.classList.remove('fade-out');
+                banner.classList.add('fade-in');
+            }, 500); // Tiempo sincronizado con la transición de desvanecimiento
+        }
+
+        setInterval(cambiarImagen, 7000); // Cambia cada 7 segundos
+
+        // Función para mostrar la animación de carga después de 12 segundos
+        setTimeout(() => {
+            const bienvenida = document.getElementById('bienvenida');
+            const cargando = document.getElementById('cargando');
+            bienvenida.style.transition = 'opacity 1s ease';
+            bienvenida.style.opacity = 0;
+
+            setTimeout(() => {
+                bienvenida.style.display = 'none';
+                cargando.style.display = 'flex'; // Mostrar la animación de carga
+            }, 1000); // Tiempo para la transición de desvanecimiento
+
+            // Redirige a la nueva página después de 3 segundos de mostrar la animación de carga
+            setTimeout(() => {
+                window.location.href = "file:///C:/Users/Juan%20Carlos/OneDrive/Escritorio/Desarrollo/Index.html";
+            }, 3000); // Cambia el tiempo según sea necesario
+        }, 12000); // Muestra la animación después de 12 segundos
+    </script>
+</body>
+</html>
